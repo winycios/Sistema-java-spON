@@ -1,16 +1,28 @@
 package DAO;
 
 import conexao.Conexao;
+import conexao.ConexaoMySql;
+import conexao.ConexaoServer;
 import entities.Chamado;
 import entities.Interface;
 import entities.ItensDecoracao;
+import integracao.Slack;
+import org.json.JSONObject;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ChamadosDAO {
+
+    // conexão my sql
+    private static final Conexao connectMy = new ConexaoMySql();
+
+    // conexão sql server
+    private static final Conexao connectserver = new ConexaoServer();
     private static Integer idPc;
 
     public Integer getIdPc() {
@@ -21,11 +33,13 @@ public class ChamadosDAO {
     public void InsertChamado(Chamado chamado) {
         IdPcDAO pc = new IdPcDAO();
         Integer id = pc.pegarIdPc();
+        JSONObject json = new JSONObject();
+        String textoAlerta;
 
         if (id == null) {
             Interface inicio = new Interface();
             inicio.Opcoes();
-        }else {
+        } else {
             idPc = id;
         }
 
@@ -36,10 +50,31 @@ public class ChamadosDAO {
 
         try {
             if (procurarChamado() == null) {
-                conn = Conexao.createConnectionToMySQL();
+                /* Conexão my sql
+                conn = connectMy.criarConexao();*/
+
+            // conexao sql server//
+            conn = connectserver.criarConexao();
+
                 pstm = conn.prepareStatement(sql);
+
+                // atualiza o status do pc
                 StatusPc();
 
+                // formatação de data
+                SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                // Pega a data e hora atual
+                Date data = new Date();
+
+                textoAlerta = String.format("""
+                        Foi aberto um chamado!
+                        Descrição do problema: %s,
+                        Pc com problema: %s,
+                        Hora da abertura do chamado: %s
+                        """, chamado.getProblema(), nomePc(), formato.format(data));
+
+                json.put("text", textoAlerta);
+                Slack.sendMessage(json);
                 int rset = pstm.executeUpdate();
 
                 ItensDecoracao.barra();
@@ -72,7 +107,7 @@ public class ChamadosDAO {
     // Verifica se já tem chamados encaminhados para determinado computador
     public Integer procurarChamado() {
 
-        String sql = String.format("select idComputador from tbComputador where idComputador = %d AND status != \"bom\";", getIdPc());
+        String sql = String.format("select idComputador from tbComputador where idComputador = %d AND status != 'bom';", getIdPc());
 
         Integer id = null;
 
@@ -81,7 +116,11 @@ public class ChamadosDAO {
         ResultSet rset = null;
 
         try {
-            conn = Conexao.createConnectionToMySQL();
+             /* Conexão my sql
+                conn = connectMy.criarConexao();*/
+
+            // conexao sql server//
+            conn = connectserver.criarConexao();
             pstm = conn.prepareStatement(sql);
             rset = pstm.executeQuery();
 
@@ -121,7 +160,12 @@ public class ChamadosDAO {
         PreparedStatement pstm = null;
 
         try {
-            conn = Conexao.createConnectionToMySQL();
+              /* Conexão my sql
+                conn = connectMy.criarConexao();*/
+
+            // conexao sql server//
+            conn = connectserver.criarConexao();
+
             pstm = conn.prepareStatement(sql);
 
             int rset = pstm.executeUpdate();
@@ -142,6 +186,49 @@ public class ChamadosDAO {
                 ex.printStackTrace();
             }
         }
+    }
+
+    public String nomePc() {
+
+        String sql = String.format("select apelidoComputador from tbComputador where idComputador = %d;", getIdPc());
+        Connection conn = null;
+        PreparedStatement pstm = null;
+        String apelido = "";
+        ResultSet rset = null;
+
+        try {
+               /* Conexão my sql
+                conn = connectMy.criarConexao();*/
+
+            // conexao sql server//
+            conn = connectserver.criarConexao();
+
+            pstm = conn.prepareStatement(sql);
+            rset = pstm.executeQuery();
+
+
+            while (rset.next()) {
+                apelido = rset.getString("apelidoComputador");
+            }
+
+        } catch (Exception ex) {
+            // Tratamento de exceção genérica
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (pstm != null) {
+                    pstm.close();
+                }
+
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return apelido;
     }
 }
 

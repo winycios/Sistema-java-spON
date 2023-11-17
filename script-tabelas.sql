@@ -1,4 +1,4 @@
-	-- Arquivo de apoio, caso você queira criar tabelas como as aqui criadas para a API funcionar.
+-- Arquivo de apoio, caso você queira criar tabelas como as aqui criadas para a API funcionar.
 CREATE DATABASE SuperVisiON;
 
 USE SuperVisiON;
@@ -57,8 +57,6 @@ FOREIGN KEY (fk_cpfOperador) REFERENCES tbUsuario(cpf),
 FOREIGN KEY (fk_idComputador) REFERENCES tbComputador(idComputador)
 );
 
-
-
 CREATE TABLE tbMonitoramento(
 
 dataHora DATETIME PRIMARY KEY,
@@ -68,11 +66,11 @@ cpuFreq INT,
 gpuTemp INT,
 gpuFreq INT,
 redeLatencia INT,
-redePacote INT,
 disco INT,
 ram INT,
 FOREIGN KEY (fk_idComputador) REFERENCES tbComputador(idComputador)
 );
+
 
 create user 'superOn'@'localhost' identified by '123';
 grant all privileges on SuperVisiON.* to 'superOn'@'localhost';

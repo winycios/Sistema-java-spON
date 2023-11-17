@@ -1,6 +1,8 @@
 package DAO;
 
 import conexao.Conexao;
+import conexao.ConexaoMySql;
+import conexao.ConexaoServer;
 import entities.Usuario;
 
 import java.sql.Connection;
@@ -10,6 +12,11 @@ import java.sql.SQLException;
 
 public class UserDAO {
 
+    // conexão my sql
+    private static final Conexao connectMy = new ConexaoMySql();
+
+    // conexão sql server
+    private static final Conexao connectserver = new ConexaoServer();
     private static String nome;
 
     public String getNome() {
@@ -31,12 +38,16 @@ public class UserDAO {
         ResultSet rset = null;
 
         try {
-            conn = Conexao.createConnectionToMySQL();
+              /* Conexão my sql
+                conn = connectMy.criarConexao();*/
+
+            // conexao sql server//
+            conn = connectserver.criarConexao();
             pstm = conn.prepareStatement(sql);
             rset = pstm.executeQuery();
 
             while (rset.next()) {
-                 nome = rset.getNString("nome");
+                nome = rset.getString("nome");
             }
 
             if (nome == "") {

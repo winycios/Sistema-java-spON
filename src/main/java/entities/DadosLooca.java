@@ -2,9 +2,11 @@ package entities;
 
 import com.github.britooo.looca.api.core.Looca;
 import com.github.britooo.looca.api.group.discos.DiscoGrupo;
-import com.github.britooo.looca.api.group.processador.Processador;
 import com.github.britooo.looca.api.group.temperatura.Temperatura;
 import entities.util.Converter;
+import oshi.SystemInfo;
+import oshi.hardware.HWDiskStore;
+import oshi.hardware.HardwareAbstractionLayer;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,30 +21,59 @@ public class DadosLooca {
     DiscoGrupo disco = new DiscoGrupo();
 
 
+    // processador
     public Double getUso() {
         return looca.getProcessador().getUso();
     }
 
+    // processador
     public Double getTemperatura() {
         return temperatura.getTemperatura();
     }
 
+    // ram
     public Double porcentualRam() {
         Double porcentual = ((Converter.formater(looca.getMemoria().getEmUso()) / Converter.formater(looca.getMemoria().getTotal())) * 100);
 
         return porcentual;
     }
 
-    public Double tamanhoDisco() {
+    // disco
+    public Double atividadeDisco() {
+        // Obtém informações do sistema
+        SystemInfo systemInfo = new SystemInfo();
 
-        return Converter.formater(disco.getTamanhoTotal());
+        try {
+            HardwareAbstractionLayer hardware = systemInfo.getHardware();
+            HWDiskStore disk = hardware.getDiskStores().get(0); // Pega o primeiro disco, você pode adaptar conforme necessário
+
+            // Registra o tempo inicial
+            long initialTime = System.currentTimeMillis();
+            long initialTransferTime = disk.getTransferTime();
+
+            Thread.sleep(5000); // Aguarda 5 segundos(Tirar essa parte quebra o resultado)
+
+            // Atualiza os atributos do disco para obter os dados mais recentes
+            disk.updateAttributes();
+
+            // Registra o tempo final
+            long finalTime = System.currentTimeMillis();
+            long finalTransferTime = disk.getTransferTime();
+
+            // Calcula a porcentagem de tempo de atividade
+            double activeTime = finalTransferTime - initialTransferTime;
+            double totalTime = finalTime - initialTime;
+
+            double activityPercentage = (activeTime / totalTime) * 100;
+
+            return activityPercentage;
+        } catch (Exception e) {
+            System.out.println("Erro ao pegar o tempo de atividade do disco: " + e);
+            return null;
+        }
     }
 
-    public Double espacoDisco() {
-
-        return Converter.formater(disc.getFreeSpace());
-    }
-
+    // rede
     public Integer latenciaRede() {
         //Informações da Rede
         String host = "www.google.com"; // Você pode substituir pelo host desejado
@@ -74,9 +105,8 @@ public class DadosLooca {
                 Uso do Processador = %.0f%%
                 Temperatura do processador = %.0f
                 Porcentual da ram = %.0f%%
-                Tamanho do disco = %.0f GB
-                Espaço do disco = %.0f
+                Uso do disco = %.0f%%
                 Latencia = %d MS
-                """, getUso(),getTemperatura(), porcentualRam(), tamanhoDisco(), espacoDisco(), latenciaRede());
+                """, getUso(), getTemperatura(), porcentualRam(), atividadeDisco(), latenciaRede());
     }
 }

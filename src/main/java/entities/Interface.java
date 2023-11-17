@@ -4,8 +4,6 @@ import DAO.ChamadosDAO;
 import DAO.LoocaDAO;
 import DAO.UserDAO;
 
-import javax.swing.*;
-
 import java.time.LocalDateTime;
 import java.util.Scanner;
 
@@ -21,8 +19,9 @@ public class Interface {
         System.out.println(String.format("""
                 Olá %s, escolha uma das opções abaixo:
                 1 - Enviar dados do hardware
-                2 - Fazer um chamado
-                3 - Fechar sistema""", user.getNome()));
+                2 - Enviar massa de dados do hardware
+                3 - Fazer um chamado
+                4 - Fechar sistema""", user.getNome()));
         ItensDecoracao.barra();
         Integer escolha = ler.nextInt();
         Escolha(escolha);
@@ -36,10 +35,14 @@ public class Interface {
                 break;
             }
             case 2: {
-                FazerChamado();
+                EnviarMassaDadosLooca();
                 break;
             }
             case 3: {
+                FazerChamado();
+                break;
+            }
+            case 4: {
 
                 exit(0);
                 break;
@@ -64,6 +67,17 @@ public class Interface {
         Opcoes();
     }
 
+    public void EnviarMassaDadosLooca() {
+
+        LoocaDAO looca = new LoocaDAO();
+
+        // Mostra os dados vindo da looca
+        ItensDecoracao.barra();
+        System.out.println("As inserções serão feitas a cada cinco segundos !");
+
+        looca.inserirMassaDados();
+    }
+
     public void FazerChamado() {
         Scanner lerTexto = new Scanner(System.in);
         ChamadosDAO chamado = new ChamadosDAO();
@@ -79,7 +93,7 @@ public class Interface {
         // validação para caso o campo venha vazio
         if (problem.isBlank()) {
             System.out.println("O campo está vazio, isso não é brincadeira");
-        }else{
+        } else {
             // criação de um objeto chamado
             Chamado dados = new Chamado(problem, String.valueOf(hora));
 

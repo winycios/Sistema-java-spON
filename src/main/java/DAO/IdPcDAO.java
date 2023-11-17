@@ -1,6 +1,8 @@
 package DAO;
 
 import conexao.Conexao;
+import conexao.ConexaoMySql;
+import conexao.ConexaoServer;
 import entities.Interface;
 import entities.ItensDecoracao;
 
@@ -11,6 +13,12 @@ import java.sql.SQLException;
 import java.util.Scanner;
 
 public class IdPcDAO {
+
+    // conexão my sql
+    private static final Conexao connectMy = new ConexaoMySql();
+
+    // conexão sql server
+    private static final Conexao connectserver = new ConexaoServer();
 
     // Pega o id do pc a partir do apelido fornecido
     public Integer pegarIdPc() {
@@ -35,7 +43,7 @@ public class IdPcDAO {
 
         String sql = String.format("SELECT idComputador FROM tbComputador WHERE apelidoComputador = '%s' AND fk_idEvento = (select e.idEvento from tbEvento e\n" +
                 "inner join tbComputador c ON c.fk_idEvento = e.idEvento\n" +
-                "where c.apelidoComputador = '%s' AND e.status = \"Em andamento\");", apelido, apelido);
+                "where c.apelidoComputador = '%s' AND e.status = 'Em andamento');", apelido, apelido);
 
         Integer id = null; // Inicializado como null para indicar que não foi encontrado
 
@@ -44,7 +52,12 @@ public class IdPcDAO {
         ResultSet rset = null;
 
         try {
-            conn = Conexao.createConnectionToMySQL();
+                 /* Conexão my sql
+                conn = connectMy.criarConexao();*/
+
+            // conexao sql server//
+            conn = connectserver.criarConexao();
+
             pstm = conn.prepareStatement(sql);
             rset = pstm.executeQuery();
 
