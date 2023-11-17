@@ -28,8 +28,8 @@ public class Teste {
         Usuario user = new Usuario(cpf, senha);
         Boolean op = procurar.selectUser(user);
 
-        if (op) {
 
+        if (op) {
             // mostra as opções
             inteface.Opcoes();
         } else {

@@ -12,8 +12,8 @@ public class ConexaoMySql extends Conexao{
     //Senha do banco
     private static final String PASSWORD = "123";
 
-    //Caminho do banco de dados, porta, nome do banco de dados
-    private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/SuperVisiON";
+    //Caminho do banco de dados, porta, nome do banco de dados. Criação da contigencia de dados
+    private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/SuperVisiON_Individual";
 
     /*
      * Conexão com o banco de dados

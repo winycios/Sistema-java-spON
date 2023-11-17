@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>individual_sp2</artifactId>
+    <artifactId>SuperVisiON-individual</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -40,5 +40,4 @@
             <version>20231013</version>
         </dependency>
     </dependencies>
-
 </project>

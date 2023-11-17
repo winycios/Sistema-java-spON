@@ -17,6 +17,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static java.lang.System.exit;
+
 public class LoocaDAO {
 
     public static final LogManager logManager = new LogManager();
@@ -35,8 +37,10 @@ public class LoocaDAO {
         IdPcDAO pc = new IdPcDAO();
         Integer id = pc.pegarIdPc();
 
-        // salva a informação no log
-        logManager.salvarLog(nomePc(id));
+
+        // Insere os dados no my sql
+        InsertDadosMySql(dados, id);
+
 
         LocalDateTime hora = LocalDateTime.now();
         Integer num = ThreadLocalRandom.current().nextInt(4, 9);
@@ -52,8 +56,8 @@ public class LoocaDAO {
                 return false;
 
             } else {
-                   /* Conexão my sql
-                conn = connectMy.criarConexao();*/
+                // salva a informação no log
+                logManager.salvarLog(nomePc(id));
 
                 // conexao sql server//
                 conn = connectserver.criarConexao();
@@ -91,18 +95,22 @@ public class LoocaDAO {
 
         DadosLooca dados = new DadosLooca();
 
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                massaDados(dados, id);
-                //Valida para saber qual componente está acima do normal
-                verificarComponentesLog(dados);
-                // salva a informação no log
-                logManager.salvarLog(nomePc(id));
-
-
-            }
-        }, 0, 5000);
+        if (id == null) {
+            ItensDecoracao.barra();
+            System.out.println("Sistema finalizado");
+            exit(0);;
+        } else {
+            new Timer().scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    massaDados(dados, id);
+                    //Valida para saber qual componente está acima do normal
+                    verificarComponentesLog(dados);
+                    // salva a informação no log
+                    logManager.salvarLog(nomePc(id));
+                }
+            }, 0, 5000);
+        }
     }
 
 
@@ -118,12 +126,8 @@ public class LoocaDAO {
 
         try {
             if (id == null) {
-                return false;
-
+              return false;
             } else {
-                 /* Conexão my sql
-                conn = connectMy.criarConexao();*/
-
                 // conexao sql server//
                 conn = connectserver.criarConexao();
 
@@ -165,33 +169,33 @@ public class LoocaDAO {
 
         if ((lat > 30)) {
             logManager.setLog("Latência da rede acima do ideal", LogLevel.AVISO, HardwareType.REDE, lat.toString());
-        } else if (lat > 50){
+        } else if (lat > 50) {
             logManager.setLog("limite de latência da rede alcançado", LogLevel.PERIGO, HardwareType.REDE, lat.toString());
         }
 
         if (ram > 70) {
             logManager.setLog("uso de RAM fora do ideal", LogLevel.AVISO, HardwareType.RAM, String.format("%.0f", ram));
-        } else  if (ram > 90){
+        } else if (ram > 90) {
             logManager.setLog("uso de RAM muito acima do ideal", LogLevel.PERIGO, HardwareType.RAM, String.format("%.0f", ram));
         }
 
         if (disco > 50) {
             logManager.setLog("uso do DISCO fora do ideal", LogLevel.AVISO, HardwareType.DISCO, String.format("%.0f", disco));
 
-        } else if (disco > 80){
+        } else if (disco > 80) {
             logManager.setLog("uso do DISCO muito acima do ideal", LogLevel.PERIGO, HardwareType.DISCO, String.format("%.0f", disco));
         }
 
         if (temperatura > 40) {
             logManager.setLog("Temperatura da CPU anormal", LogLevel.AVISO, HardwareType.CPU, String.format("%.0f", temperatura));
 
-        } else if (temperatura > 80){
+        } else if (temperatura > 80) {
             logManager.setLog("Temperatura da CPU muito acima do ideal", LogLevel.PERIGO, HardwareType.CPU, String.format("%.0f", temperatura));
         }
 
         if (frequencia > 30) {
             logManager.setLog("Frequência da CPU anormal", LogLevel.AVISO, HardwareType.CPU, String.format("%.0f", frequencia));
-        } else if (frequencia > 70){
+        } else if (frequencia > 70) {
             logManager.setLog("Frequência da CPU muito acima do ideal", LogLevel.PERIGO, HardwareType.CPU, String.format("%.0f", frequencia));
         }
     }
@@ -207,9 +211,6 @@ public class LoocaDAO {
         ResultSet rset = null;
 
         try {
-               /* Conexão my sql
-                conn = connectMy.criarConexao();*/
-
             // conexao sql server//
             conn = connectserver.criarConexao();
 
@@ -239,5 +240,52 @@ public class LoocaDAO {
         }
 
         return apelido;
+    }
+
+
+    // Criar a contigencia de dados. Mandando os arquivos para o mysql
+    public Boolean InsertDadosMySql(DadosLooca dados, Integer id) {
+
+        LocalDateTime hora = LocalDateTime.now();
+        Integer num = ThreadLocalRandom.current().nextInt(4, 9);
+
+        String sql = String.format("insert into tbMonitoramento (dataHora, apelidoComputador,cpuTemp,gpuTemp, cpuFreq,redeLatencia, disco, ram)\n" +
+                "VALUES ('%s', '%s', %.0f, %.0f, %.0f, %d, %.0f, %.0f);", hora, nomePc(id), dados.getTemperatura(), (dados.getTemperatura() + num), dados.getUso(), dados.latenciaRede(), dados.atividadeDisco(), dados.porcentualRam());
+
+        Connection conn = null;
+        PreparedStatement pstm = null;
+
+        try {
+            if (id == null) {
+                return false;
+
+            } else {
+                // conexao sql server//
+                conn = connectMy.criarConexao();
+
+                pstm = conn.prepareStatement(sql);
+                pstm.executeUpdate();
+
+                ItensDecoracao.barra();
+                System.out.println("Dados enviados para o mySql com sucesso !!");
+                ItensDecoracao.barra();
+            }
+        } catch (Exception ex) {
+            // Tratamento de exceção genérica
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (pstm != null) {
+                    pstm.close();
+                }
+
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return true;
     }
 }

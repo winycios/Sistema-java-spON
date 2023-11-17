@@ -50,16 +50,15 @@ public class ChamadosDAO {
 
         try {
             if (procurarChamado() == null) {
-                /* Conexão my sql
-                conn = connectMy.criarConexao();*/
-
-            // conexao sql server//
-            conn = connectserver.criarConexao();
+                // conexao sql server//
+                conn = connectserver.criarConexao();
 
                 pstm = conn.prepareStatement(sql);
 
                 // atualiza o status do pc
                 StatusPc();
+                // gera a contigencia de dados
+                InsertChamadoMySql(chamado);
 
                 // formatação de data
                 SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -229,6 +228,44 @@ public class ChamadosDAO {
         }
 
         return apelido;
+    }
+
+
+    // gerar contigencia de dados. Inserção no my sql
+    public void InsertChamadoMySql(Chamado chamado) {
+        String sql = String.format("INSERT INTO tbOcorrencia (descricao, apelidoComputador, hora)\n" +
+                "VALUES ('%s', '%s', '%s');", chamado.getProblema(), nomePc(), chamado.getHora());
+        Connection conn = null;
+        PreparedStatement pstm = null;
+
+        try {
+            // conexao sql server//
+            conn = connectMy.criarConexao();
+
+            pstm = conn.prepareStatement(sql);
+
+            pstm.executeUpdate();
+
+            ItensDecoracao.barra();
+            System.out.println("Chamado enviado para o banco local!");
+            ItensDecoracao.barra();
+
+        } catch (Exception ex) {
+            // Tratamento de exceção genérica
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (pstm != null) {
+                    pstm.close();
+                }
+
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }
 

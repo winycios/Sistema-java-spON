@@ -14,7 +14,7 @@ public class ConexaoServer extends Conexao {
     /* conexao com o banco de dados SQL SERVER*/
 
     @Override
-    public Connection criarConexao() throws ClassNotFoundException, SQLException {
+    public Connection criarConexao() throws SQLException {
 
         Connection conexao = DriverManager.getConnection(url, usuario, senha);
 
