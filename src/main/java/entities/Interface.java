@@ -21,7 +21,8 @@ public class Interface {
                 1 - Enviar dados do hardware
                 2 - Enviar massa de dados do hardware
                 3 - Fazer um chamado
-                4 - Fechar sistema""", user.getNome()));
+                4 - Forçar máquina
+                5 - Fechar sistema""", user.getNome()));
         ItensDecoracao.barra();
         Integer escolha = ler.nextInt();
         Escolha(escolha);
@@ -42,7 +43,12 @@ public class Interface {
                 FazerChamado();
                 break;
             }
+
             case 4: {
+                forcarDados();
+                break;
+            }
+            case 5: {
 
                 exit(0);
                 break;
@@ -76,6 +82,19 @@ public class Interface {
         System.out.println("As inserções serão feitas a cada cinco segundos !");
 
         looca.inserirMassaDados();
+    }
+
+    public void forcarDados() {
+        DadosLooca dados = new DadosLooca();
+        LoocaDAO looca = new LoocaDAO();
+
+        // Mostra os dados vindo da looca
+        ItensDecoracao.barra();
+        System.out.println("\n" + dados);
+
+        looca.forcarDados(dados);
+        //Envia para a tela de login
+        Opcoes();
     }
 
     public void FazerChamado() {

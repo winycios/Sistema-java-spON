@@ -29,7 +29,7 @@ public class LoocaDAO {
     // conexão sql server
     private static final Conexao connectserver = new ConexaoServer();
 
-    public Boolean InsertDados(DadosLooca dados) {
+    public void InsertDados(DadosLooca dados) {
         //Valida para saber qual componente está acima do normal
         verificarComponentesLog(dados);
 
@@ -37,23 +37,20 @@ public class LoocaDAO {
         IdPcDAO pc = new IdPcDAO();
         Integer id = pc.pegarIdPc();
 
-
         // Insere os dados no my sql
         InsertDadosMySql(dados, id);
-
 
         LocalDateTime hora = LocalDateTime.now();
         Integer num = ThreadLocalRandom.current().nextInt(4, 9);
 
         String sql = String.format("insert into tbMonitoramento (dataHora, fk_idComputador,cpuTemp,gpuTemp, cpuFreq,redeLatencia, disco, ram)\n" +
-                "VALUES ('%s', %d, %.0f, %.0f, %.0f, %d, %.0f, %.0f);", hora, id, dados.getTemperatura(), (dados.getTemperatura() + num), dados.getUso(), dados.latenciaRede(), dados.atividadeDisco(), dados.porcentualRam());
+                "VALUES ('%s', %d, %.0f, %.0f, %.0f, %d, %.0f, %.0f);", hora, id, dados.getTemperatura(), (dados.getTemperatura() + num), dados.getUso(), dados.latenciaRede(), dados.atividadeDisco(), (dados.porcentualRam() / 1000));
 
         Connection conn = null;
         PreparedStatement pstm = null;
 
         try {
             if (id == null) {
-                return false;
 
             } else {
                 // salva a informação no log
@@ -85,7 +82,64 @@ public class LoocaDAO {
                 ex.printStackTrace();
             }
         }
-        return true;
+    }
+
+
+    // força a maquina
+    public void forcarDados(DadosLooca dados) {
+        //Valida para saber qual componente está acima do normal
+        verificarComponentesLog(dados);
+
+        // pega o id do pc que o usuario quer fazer a inserção
+        IdPcDAO pc = new IdPcDAO();
+        Integer id = pc.pegarIdPc();
+
+        // Insere os dados no my sql
+        InsertDadosMySql(dados, id);
+
+        LocalDateTime hora = LocalDateTime.now();
+        Integer num = ThreadLocalRandom.current().nextInt(4, 9);
+        Integer ram = ThreadLocalRandom.current().nextInt(75, 100);
+
+        String sql = String.format("insert into tbMonitoramento (dataHora, fk_idComputador,cpuTemp,gpuTemp, cpuFreq,redeLatencia, disco, ram)\n" +
+                "VALUES ('%s', %d, %.0f, %.0f, %.0f, %d, %.0f, %d);", hora, id, dados.getTemperatura(), (dados.getTemperatura() + num), dados.getUso(), dados.latenciaRede(), dados.atividadeDisco(), ram);
+
+        Connection conn = null;
+        PreparedStatement pstm = null;
+
+        try {
+            if (id == null) {
+
+            } else {
+                // salva a informação no log
+                logManager.salvarLog(nomePc(id));
+
+                // conexao sql server//
+                conn = connectserver.criarConexao();
+
+                pstm = conn.prepareStatement(sql);
+                pstm.executeUpdate();
+
+                ItensDecoracao.barra();
+                System.out.println("Dados enviados com sucesso !!");
+                ItensDecoracao.barra();
+            }
+        } catch (Exception ex) {
+            // Tratamento de exceção genérica
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (pstm != null) {
+                    pstm.close();
+                }
+
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public void inserirMassaDados() {
@@ -118,8 +172,11 @@ public class LoocaDAO {
         LocalDateTime hora = LocalDateTime.now();
         Integer num = ThreadLocalRandom.current().nextInt(4, 9);
 
+        // Insere os dados no my sql
+        InsertDadosMySql(dados, id);
+
         String sql = String.format("insert into tbMonitoramento (dataHora, fk_idComputador,cpuTemp,gpuTemp, cpuFreq,redeLatencia, disco, ram)\n" +
-                "VALUES ('%s', %d, %.0f, %.0f, %.0f, %d, %.0f, %.0f);", hora, id, dados.getTemperatura(), (dados.getTemperatura() + num), dados.getUso(), dados.latenciaRede(), dados.atividadeDisco(), dados.porcentualRam());
+                "VALUES ('%s', %d, %.0f, %.0f, %.0f, %d, %.0f, %.0f);", hora, id, dados.getTemperatura(), (dados.getTemperatura() + num), dados.getUso(), dados.latenciaRede(), dados.atividadeDisco(), (dados.porcentualRam() / 1000));
 
         Connection conn = null;
         PreparedStatement pstm = null;
